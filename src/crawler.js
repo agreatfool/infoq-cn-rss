@@ -1,0 +1,154 @@
+const LibPath = require('path');
+const LibFs = require('fs');
+
+const puppeteer = require('puppeteer');
+const RSS = require('rss');
+const moment = require('moment');
+const readdirSorted = require('readdir-sorted');
+
+let FEEDS = [];
+
+(async () => {
+  const browser = await puppeteer.launch({
+    headless: false
+  });
+  const page = await browser.newPage();
+  await page.goto('https://www.infoq.cn/');
+  await page.setViewport({
+    width: 1920,
+    height: 1080
+  });
+
+  page.on('console', consoleObj => console.log(consoleObj.text()));
+
+  await autoScroll(page);
+
+  FEEDS = await page.evaluate(() => {
+    let items = document.querySelector('.recommond-wrapper .article-list .list');
+
+    let feeds = [];
+
+    for (let item of items.children) {
+      if (item.classList.contains('feed-image')) {
+        continue; // just a image, ignore it
+      }
+
+      let link = item.querySelector('.info .com-article-title');
+      let url = link.href;
+      let title = link.innerText;
+      let description = item.querySelector('.info .summary').innerText;
+      let timeDiff = item.querySelector('.info .extra .date').innerText;
+
+      feeds.push({
+        title,
+        url,
+        description,
+        date: timeDiff,
+      });
+    }
+
+    return feeds;
+  });
+
+  await cleanHistory();
+  handleDate();
+  generateRss();
+
+  await browser.close();
+})();
+
+async function autoScroll(page) {
+  await page.evaluate(async () => {
+    await new Promise((resolve, reject) => {
+      let totalHeight = 0;
+      let distance = 100;
+      let timer = setInterval(() => {
+        let scrollHeight = document.body.scrollHeight;
+        window.scrollBy(0, distance);
+        totalHeight += distance;
+
+        if (totalHeight >= scrollHeight) {
+          clearInterval(timer);
+          resolve();
+        }
+      }, 100);
+    });
+  });
+}
+
+async function cleanHistory() {
+  const dirFiles = await readdirSorted(LibPath.join(__dirname, '..', 'history'), {
+    locale: 'en',
+    numeric: true
+  });
+
+  if (dirFiles.length <= 200) {
+    return; // no need to clean
+  }
+
+  //TODO clean history files
+}
+
+function handleDate() {
+  if (FEEDS.length === 0) {
+    return; // nothing to handle
+  }
+
+  const patternNow = new RegExp(/^刚刚$/g);
+  const patternMinute = new RegExp(/^\d+\s分钟前$/g);
+  const patternHour = new RegExp(/^\d+\s小时前$/g);
+  const patternDate = new RegExp(/^\d+\s年\s\d+\s月\s\d+\s日$/g);
+
+  FEEDS.forEach((item, index) => {
+    let date = null;
+    let timeDiff = item.date;
+
+    if (timeDiff.match(patternNow) !== null) {
+      date = moment().utc().utcOffset(8).format();
+    } else if (timeDiff.match(patternMinute) !== null) {
+      date = moment().utc().utcOffset(8).subtract(timeDiff.match(/\d+/g)[0], 'minutes').format();
+    } else if (timeDiff.match(patternHour) !== null) {
+      date = moment().utc().utcOffset(8).subtract(timeDiff.match(/\d+/g)[0], 'hours').format();
+    } else if (timeDiff.match(patternDate) !== null) {
+      const nums = timeDiff.match(/\d+/g);
+
+      let year = nums[0];
+      let month = nums[1];
+      let day = nums[2];
+
+      if (month < 10) {
+        month = '0' + month;
+      }
+      if (day < 10) {
+        day = '0' + day;
+      }
+
+      date = moment(`${year}-${month}-${day}`).utc().utcOffset(8).format();
+    }
+
+    FEEDS[index].date = date;
+  });
+}
+
+function generateRss() {
+  if (FEEDS.length === 0) {
+    return; // nothing to generate
+  }
+
+  let feed = new RSS({
+    title: 'InfoQ - 促进软件开发领域知识与创新的传播',
+    site_url: 'https://infoq.cn',
+    description: 'InfoQ 是一个实践驱动的社区资讯站点，致力于促进软件开发领域知识与创新的传播。',
+  });
+
+  FEEDS.forEach((item) => {
+    feed.item({
+      title: item.title,
+      url: item.url,
+      description: item.description,
+      date: item.date,
+    });
+  });
+
+  LibFs.writeFileSync(LibPath.join(__dirname, '..', 'history', `infoq_cn_feed_${moment().format('YYYY-MM-DD_HHmmss_SSSS')}.xml`), feed.xml());
+}

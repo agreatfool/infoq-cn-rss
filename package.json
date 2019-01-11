@@ -1,0 +1,26 @@
+{
+  "name": "infoq-cn-rss",
+  "version": "0.0.1",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/agreatfool/infoq-cn-rss.git"
+  },
+  "author": "Jonathan Dai",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/agreatfool/infoq-cn-rss/issues"
+  },
+  "homepage": "https://github.com/agreatfool/infoq-cn-rss#readme",
+  "dependencies": {
+    "koa": "2.6.2",
+    "moment": "2.23.0",
+    "puppeteer": "1.11.0",
+    "readdir-sorted": "2.1.0",
+    "rss": "1.2.2"
+  }
+}
