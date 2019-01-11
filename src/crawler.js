@@ -10,11 +10,13 @@ let FEEDS = [];
 
 (async () => {
   const browser = await puppeteer.launch({
-    headless: false,
+    headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
   const page = await browser.newPage();
+  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36');
   await page.goto('https://www.infoq.cn/');
+
   await page.setViewport({
     width: 1920,
     height: 1080
@@ -23,6 +25,8 @@ let FEEDS = [];
   page.on('console', consoleObj => console.log(consoleObj.text()));
 
   await autoScroll(page);
+
+  await page.screenshot('d.png'); // dummy, without this, page elements would not be rendered
 
   FEEDS = await page.evaluate(() => {
     let items = document.querySelector('.recommond-wrapper .article-list .list');
@@ -60,7 +64,7 @@ let FEEDS = [];
 
 async function autoScroll(page) {
   await page.evaluate(async () => {
-    await new Promise((resolve, reject) => {
+    await new Promise((resolve) => {
       let totalHeight = 0;
       let distance = 100;
       let timer = setInterval(() => {
