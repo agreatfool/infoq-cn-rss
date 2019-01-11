@@ -77,16 +77,26 @@ async function autoScroll(page) {
 }
 
 async function cleanHistory() {
-  const dirFiles = await readdirSorted(LibPath.join(__dirname, '..', 'history'), {
+  const baseDir = LibPath.join(__dirname, '..', 'history');
+  const dirFiles = await readdirSorted(baseDir, {
     locale: 'en',
     numeric: true
   });
 
-  if (dirFiles.length <= 200) {
+  const CLEAN_EDGE = 200;
+
+  if (dirFiles.length <= CLEAN_EDGE) {
     return; // no need to clean
   }
 
-  //TODO clean history files
+  let loop = 1;
+  for (const file of dirFiles) {
+    if (loop >= CLEAN_EDGE) {
+      break; // enough
+    }
+    LibFs.unlinkSync(LibPath.join(baseDir, file));
+    loop++;
+  }
 }
 
 function handleDate() {
@@ -150,5 +160,8 @@ function generateRss() {
     });
   });
 
-  LibFs.writeFileSync(LibPath.join(__dirname, '..', 'history', `infoq_cn_feed_${moment().format('YYYY-MM-DD_HHmmss_SSSS')}.xml`), feed.xml());
+  const feedDest = LibPath.join(__dirname, '..', 'history', `infoq_cn_feed_${moment().format('YYYY-MM-DD_HHmmss_SSSS')}.xml`);
+  LibFs.writeFileSync(feedDest, feed.xml());
+
+  console.log(`Feeds[${FEEDS.length}] xml dumped: ${feedDest}`);
 }
