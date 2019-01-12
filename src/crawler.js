@@ -13,51 +13,58 @@ let FEEDS = [];
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
+
   const page = await browser.newPage();
   await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36');
   await page.goto('https://www.infoq.cn/');
-
   await page.setViewport({
     width: 1920,
     height: 1080
   });
-
   page.on('console', consoleObj => console.log(consoleObj.text()));
 
-  await autoScroll(page);
+  try {
 
-  await page.screenshot('d.png'); // dummy, without this, page elements would not be rendered
+    await autoScroll(page);
 
-  FEEDS = await page.evaluate(() => {
-    let items = document.querySelector('.recommond-wrapper .article-list .list');
+    // await page.screenshot('d.png'); // dummy, without this, page elements would not be rendered
 
-    let feeds = [];
+    FEEDS = await page.evaluate(() => {
+      let items = document.querySelector('.recommond-wrapper .article-list .list');
 
-    for (let item of items.children) {
-      if (item.classList.contains('feed-image')) {
-        continue; // just a image, ignore it
+      let feeds = [];
+
+      for (let item of items.children) {
+        if (item.classList.contains('feed-image')) {
+          continue; // just a image, ignore it
+        }
+
+        let link = item.querySelector('.info .com-article-title');
+        let url = link.href;
+        let title = link.innerText;
+        let description = item.querySelector('.info .summary').innerText;
+        let timeDiff = item.querySelector('.info .extra .date').innerText;
+
+        feeds.push({
+          title,
+          url,
+          description,
+          date: timeDiff,
+        });
       }
 
-      let link = item.querySelector('.info .com-article-title');
-      let url = link.href;
-      let title = link.innerText;
-      let description = item.querySelector('.info .summary').innerText;
-      let timeDiff = item.querySelector('.info .extra .date').innerText;
+      return feeds;
+    });
 
-      feeds.push({
-        title,
-        url,
-        description,
-        date: timeDiff,
-      });
-    }
+    await cleanHistory();
+    handleDate();
+    generateRss();
 
-    return feeds;
-  });
-
-  await cleanHistory();
-  handleDate();
-  generateRss();
+  } catch (e) {
+    // possible throw error: "Evaluation failed: TypeError: Cannot read property 'children' of null"
+    // handle it here, otherwise the node process would be hung
+    console.log(e);
+  }
 
   await browser.close();
 })();
