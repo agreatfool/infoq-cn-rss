@@ -27,8 +27,6 @@ let FEEDS = [];
 
     await autoScroll(page);
 
-    // await page.screenshot('d.png'); // dummy, without this, page elements would not be rendered
-
     FEEDS = await page.evaluate(() => {
       let items = document.querySelector('.recommond-wrapper .article-list .list');
 
