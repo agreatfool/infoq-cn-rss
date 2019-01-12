@@ -14,16 +14,16 @@ let FEEDS = [];
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
 
-  const page = await browser.newPage();
-  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36');
-  await page.goto('https://www.infoq.cn/');
-  await page.setViewport({
-    width: 1920,
-    height: 1080
-  });
-  page.on('console', consoleObj => console.log(consoleObj.text()));
-
   try {
+
+    const page = await browser.newPage();
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36');
+    await page.goto('https://www.infoq.cn/');
+    await page.setViewport({
+      width: 1920,
+      height: 1080
+    });
+    page.on('console', consoleObj => console.log(consoleObj.text()));
 
     await autoScroll(page);
 
