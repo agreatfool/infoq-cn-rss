@@ -41,7 +41,7 @@ upstream web{
 }
 server {
     listen       80;
-    server_name  infoq.xenojoshua.com;
+    server_name  infoq.yourhost.com;
 
     access_log  /var/log/nginx/infoq.access.log;
     error_log   /var/log/nginx/infoq.error.log;
