@@ -11,10 +11,16 @@ nvm install v8.11.1
 npm install pm2 -g
 ```
 
+### Yarn
+```bash
+npm install yarn -g
+```
+
 ### Clone source
 ```bash
 git clone https://github.com/agreatfool/infoq-cn-rss.git
 cd infoq-cn-rss
+yarn install
 ```
 
 ### Web
