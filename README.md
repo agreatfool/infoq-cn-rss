@@ -36,27 +36,27 @@ pm2 start src/crontab.js
 ### Nginx
 ```nginx
 upstream web{
-	server 127.0.0.1:3000;
-	keepalive 64;
+    server 127.0.0.1:3000;
+    keepalive 64;
 }
 server {
-	listen       80;
-	server_name  infoq.xenojoshua.com;
+    listen       80;
+    server_name  infoq.xenojoshua.com;
 
-	access_log  /var/log/nginx/infoq.access.log;
-	error_log   /var/log/nginx/infoq.error.log;
+    access_log  /var/log/nginx/infoq.access.log;
+    error_log   /var/log/nginx/infoq.error.log;
 
-	location / {
-    	proxy_read_timeout 300;
-    	proxy_pass http://web;
-    	proxy_set_header Host $http_host;
-	}
+    location / {
+        proxy_read_timeout 300;
+        proxy_pass http://web;
+        proxy_set_header Host $http_host;
+    }
 
-	error_page  404  /404.html;
-	location = /50x.html {
-    	root   /usr/share/nginx/html;
-    	proxy_set_header Host $http_host;
-	}
+    error_page  404  /404.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+        proxy_set_header Host $http_host;
+    }
 }
 ```
 start nginx
